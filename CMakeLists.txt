@@ -60,10 +60,30 @@ set_if_not_defined(GIFTI_INSTALL_LIBRARY_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 set_if_not_defined(GIFTI_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/gifti")
 set_if_not_defined(GIFTI_INSTALL_ARCHIVE_DIR "${CMAKE_INSTALL_PREFIX}/include/gifti")
 
+# NIFTI_install_choices
+set_if_not_defined(NIFTI_INSTALL_NO_DEVELOPMENT 0)
+set_if_not_defined(NIFTI_INSTALL_NO_LIBRARIES 0)
+set_if_not_defined(USE_NIFTI2_CODE ON CACHE BOOL "Do not build NIFTI2 provided by NIFTI")
+set_if_not_defined(USE_FSL_CODE ON CACHE BOOL "Do not build FSL provided by NIFTI")
+set_if_not_defined(USE_CIFTI_CODE ON  CACHE BOOL "Do not build CIFTI provided by NIFTI")
+set_if_not_defined(USE_NIFTICDF_CODE ON CACHE BOOL "Do not build NIFTICDF provided by NIFTI")
+set_if_not_defined(NIFTI_USE_PACKAGING OFF CACHE BOOL "Do not use packaging from nifti when included as part of another package")
+set_if_not_defined(NIFTI_BUILD_APPLICATIONS ON CACHE BOOL "Do not build applications provided by NIFTI")
+set_if_not_defined(NIFTI_INSTALL_RUNTIME_DIR ${GIFTI_INSTALL_RUNTIME_DIR})
+set_if_not_defined(NIFTI_INSTALL_LIBRARY_DIR ${GIFTI_INSTALL_LIBRARY_DIR})
+set_if_not_defined(NIFTI_INSTALL_INCLUDE_DIR ${GIFTI_INSTALL_INCLUDE_DIR})
+set_if_not_defined(NIFTI_INSTALL_ARCHIVE_DIR ${GIFTI_INSTALL_ARCHIVE_DIR})
 
+if (NOT NIFTI_PACKAGE_PREFIX)
+set(NIFTI_PACKAGE_PREFIX "" CACHE STRING "NIFTI package can be installed with a prefix")
+endif()
+
+# Other settings
 option(BUILD_SHARED_LIBS "Toggle building shared libraries." ON)
 add_definitions(-DHAVE_ZLIB)
 
+
+# Finding dependencies
 find_package(ITK)
 if(ITK_FOUND)
 # ITK provides expat and zlib.
