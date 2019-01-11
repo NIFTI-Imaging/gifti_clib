@@ -16,7 +16,7 @@ if(ITK_FOUND)
    set(EXPAT_LIBRARIES ITKEXPAT)
    set(ZLIB_LIBRARIES ITKznz)
    set(NIFTI_LIBRARIES ITKniftiio)
-else(ITK_FOUND)
+else()
 # Otherwise, get it from elsewhere.
   find_package(EXPAT)
   find_package(ZLIB)
@@ -27,7 +27,7 @@ else(ITK_FOUND)
   get_filename_component(GIFTI_LINK_DIRECTORIES ${NIFTI_LIBRARY} PATH)
   link_directories(${GIFTI_LINK_DIRECTORIES})
   include_directories(${NIFTI_INCLUDE_DIR})
-endif(ITK_FOUND)
+endif()
 
 # shared library API versioning -- NOT the same as the release version
 set(GIFTI_SHAREDLIB_VERSION "0.0.0")
@@ -36,7 +36,7 @@ set(GIFTI_LIBRARY_PROPERTIES VERSION ${GIFTI_SHAREDLIB_VERSION} SOVERSION ${GIFT
 
 if(ZLIB_FOUND)
   add_definitions(-DHAVE_ZLIB)
-endif(ZLIB_FOUND)
+endif()
 
 include_directories(
 ${CRKIT_SOURCE_DIR}/External
@@ -53,7 +53,7 @@ set_target_properties(giftiio PROPERTIES ${GIFTI_LIBRARY_PROPERTIES})
 target_link_libraries(giftiio ${EXPAT_LIBRARIES} ${NIFTI_LIBRARIES})
 if(ZLIB_FOUND)
   target_link_libraries(giftiio ${ZLIB_LIBRARIES})
-endif(ZLIB_FOUND)
+endif()
 
 # static version
 add_library(giftiio_static STATIC ${GIFTIIO_SRC})
