@@ -22,18 +22,28 @@ if(ITK_FOUND)
    include(${ITK_USE_FILE})
    set(EXPAT_LIBRARIES ITKEXPAT)
    set(ZLIB_LIBRARIES ITKznz)
-   set(NIFTI_LIBRARIES ITKniftiio)
+   set(${NIFTI_PACKAGE_PREFIX} ITK)
 else()
 # Otherwise, get it from elsewhere.
-  find_package(EXPAT)
-  find_package(ZLIB)
-  find_library(NIFTI_LIBRARY NAMES niftiio PATH /usr/local/nifti/lib )
-  set(NIFTI_LIBRARIES ${NIFTI_LIBRARY} znz m)
-  find_path(NIFTI_INCLUDE_DIR nifti1.h /usr/local/nifti/include/nifti
-                                       /usr/include/nifti)
-  get_filename_component(GIFTI_LINK_DIRECTORIES ${NIFTI_LIBRARY} PATH)
-  link_directories(${GIFTI_LINK_DIRECTORIES})
-  include_directories(${NIFTI_INCLUDE_DIR})
+  find_package(EXPAT REQUIRED)
+  find_package(ZLIB REQUIRED)
+  ### STEP 2 -- fetch nifti_clib immediately at configuration time, so add_subdirectory can be used.
+  include(FetchContent)
+  # If new or changed data is needed, add that data to the https://github.com/NIFTI-Imaging/nifti-test-data repo
+  # make a new release, and then update the URL and hash (shasum -a 256 <downloaded tarball>).
+  FetchContent_Declare( fetch_nifti_clib_git_repo
+          GIT_REPOSITORY https://github.com/leej3/nifti_clib.git
+          GIT_TAG        v2.1.4 # or v3.0.0, or <HASH>
+          SOURCE_DIR     ${CMAKE_CURRENT_LIST_DIR}/nifti_clib_download # <- not standard,  remove this line to download in binary tree
+          )
+  FetchContent_GetProperties(fetch_nifti_clib_git_repo)
+  if(NOT fetch_nifti_clib_git_repo)
+      set(FETCHCONTENT_QUIET OFF)
+      message(STATUS "Downloading nifti_clib from github ... please wait")
+      FetchContent_Populate( fetch_nifti_clib_git_repo )
+      message(STATUS "download complete.")
+      add_subdirectory(${fetch_nifti_clib_git_repo_SOURCE_DIR} ${fetch_nifti_clib_git_repo_BINARY_DIR})
+  endif()
 endif()
 
 # shared library API versioning -- NOT the same as the release version
@@ -41,10 +51,7 @@ set(GIFTI_SHAREDLIB_VERSION "0.0.0")
 string( REGEX MATCH "^[0-9]+" GIFTI_SHAREDLIB_SOVERSION ${GIFTI_SHAREDLIB_VERSION})
 set(GIFTI_LIBRARY_PROPERTIES VERSION ${GIFTI_SHAREDLIB_VERSION} SOVERSION ${GIFTI_SHAREDLIB_SOVERSION})
 
-if(ZLIB_FOUND)
-  add_definitions(-DHAVE_ZLIB)
-endif()
-
+add_library(giftiio gifti_io.c gifti_xml.c)
 include_directories(
 ${CRKIT_SOURCE_DIR}/External
 ${gifticlib_SOURCE_DIR}
@@ -53,19 +60,13 @@ ${gifticlib_BINARY_DIR}
 
 
 set_target_properties(giftiio PROPERTIES ${GIFTI_LIBRARY_PROPERTIES})
-target_link_libraries(giftiio ${EXPAT_LIBRARIES} ${NIFTI_LIBRARIES})
-if(ZLIB_FOUND)
-  target_link_libraries(giftiio ${ZLIB_LIBRARIES})
-endif()
-
-
-link_directories(${gifticlib_BINARY_DIR})
+target_link_libraries(giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_PACKAGE_PREFIX}nifti2)
 
 add_executable(gifti_tool gifti_tool.c)
-target_link_libraries(gifti_tool giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_LIBRARIES})
+target_link_libraries(gifti_tool giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_PACKAGE_PREFIX}nifti2)
 
 add_executable(gifti_test gifti_test.c)
-target_link_libraries(gifti_test giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_LIBRARIES})
+target_link_libraries(gifti_test giftiio)
 
 # binaries
 install(TARGETS giftiio gifti_tool gifti_test
