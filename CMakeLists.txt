@@ -75,7 +75,7 @@ set_if_not_defined(NIFTI_INSTALL_INCLUDE_DIR ${GIFTI_INSTALL_INCLUDE_DIR})
 set_if_not_defined(NIFTI_INSTALL_ARCHIVE_DIR ${GIFTI_INSTALL_ARCHIVE_DIR})
 
 if (NOT NIFTI_PACKAGE_PREFIX)
-set(NIFTI_PACKAGE_PREFIX "" CACHE STRING "NIFTI package can be installed with a prefix")
+set(NIFTI_PACKAGE_PREFIX "" CACHE STRING "NIFTI package can be installed with a prefix (the same one is used for gifti).")
 endif()
 
 # Other settings
@@ -121,16 +121,20 @@ set(GIFTI_LIBRARY_PROPERTIES VERSION ${GIFTI_SHAREDLIB_VERSION} SOVERSION ${GIFT
 
 add_library(giftiio gifti_io.c gifti_xml.c)
 set_target_properties(giftiio PROPERTIES ${GIFTI_LIBRARY_PROPERTIES})
-target_link_libraries(giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_PACKAGE_PREFIX}nifti2)
+target_link_libraries(giftiio PUBLIC ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_PACKAGE_PREFIX}nifti2)
 
 add_executable(gifti_tool gifti_tool.c)
-target_link_libraries(gifti_tool giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_PACKAGE_PREFIX}nifti2)
+target_link_libraries(gifti_tool PUBLIC giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_PACKAGE_PREFIX}nifti2)
 
 add_executable(gifti_test gifti_test.c)
 target_link_libraries(gifti_test giftiio)
 
+
+
+
 # binaries
 install(TARGETS giftiio gifti_tool gifti_test
+    EXPORT GIFTITargets
     RUNTIME DESTINATION ${GIFTI_INSTALL_RUNTIME_DIR} COMPONENT RuntimeLibraries
     LIBRARY DESTINATION ${GIFTI_INSTALL_LIBRARY_DIR} COMPONENT RuntimeLibraries
     ARCHIVE DESTINATION ${GIFTI_INSTALL_ARCHIVE_DIR} COMPONENT Development)
@@ -139,3 +143,34 @@ install(TARGETS giftiio gifti_tool gifti_test
 install(FILES gifti_io.h gifti_xml.h
     DESTINATION ${GIFTI_INSTALL_INCLUDE_DIR}
     COMPONENT Development)
+
+# For package this project:
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+      "${CMAKE_CURRENT_BINARY_DIR}/GIFTI/GIFTIConfigVersion.cmake"
+      VERSION ${GIT_REPO_VERSION}
+      COMPATIBILITY AnyNewerVersion
+)
+
+export(EXPORT GIFTITargets
+      FILE "${CMAKE_CURRENT_BINARY_DIR}/GIFTI/GIFTITargets.cmake"
+      NAMESPACE ${NIFTI_PACKAGE_PREFIX}NIFTI::
+      )
+configure_file(cmake/GIFTIConfig.cmake
+      "${CMAKE_CURRENT_BINARY_DIR}/GIFTI/GIFTIConfig.cmake"
+      COPYONLY
+      )
+
+set(ConfigPackageLocation lib/cmake/GIFTI)
+install(EXPORT GIFTITargets
+      FILE          GIFTITargets.cmake
+      NAMESPACE     ${NIFTI_PACKAGE_PREFIX}NIFTI::
+      DESTINATION   ${ConfigPackageLocation}
+      )
+install(FILES
+         cmake/GIFTIConfig.cmake
+         "${CMAKE_CURRENT_BINARY_DIR}/GIFTI/GIFTIConfigVersion.cmake"
+      DESTINATION   ${ConfigPackageLocation}
+      COMPONENT     Development
+)
