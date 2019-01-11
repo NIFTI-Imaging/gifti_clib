@@ -52,13 +52,6 @@ string( REGEX MATCH "^[0-9]+" GIFTI_SHAREDLIB_SOVERSION ${GIFTI_SHAREDLIB_VERSIO
 set(GIFTI_LIBRARY_PROPERTIES VERSION ${GIFTI_SHAREDLIB_VERSION} SOVERSION ${GIFTI_SHAREDLIB_SOVERSION})
 
 add_library(giftiio gifti_io.c gifti_xml.c)
-include_directories(
-${CRKIT_SOURCE_DIR}/External
-${gifticlib_SOURCE_DIR}
-${gifticlib_BINARY_DIR}
-)
-
-
 set_target_properties(giftiio PROPERTIES ${GIFTI_LIBRARY_PROPERTIES})
 target_link_libraries(giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_PACKAGE_PREFIX}nifti2)
 
