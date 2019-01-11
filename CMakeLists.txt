@@ -21,10 +21,6 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-# install destinations
-set(GIFTI_INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin")
-set(GIFTI_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
-set(GIFTI_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/gifti")
 macro(set_if_not_defined var defaultvalue)
 # Macro allowing to set a variable to its default value if not already defined.
 # The default value is set with:
@@ -55,6 +51,14 @@ macro(set_if_not_defined var defaultvalue)
     set(${var} "${defaultvalue}")
   endif()
 endmacro()
+
+# INSTALLATION SETTINGS
+
+# GIFTI install destinations
+set_if_not_defined(GIFTI_INSTALL_RUNTIME_DIR "${CMAKE_INSTALL_PREFIX}/bin")
+set_if_not_defined(GIFTI_INSTALL_LIBRARY_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+set_if_not_defined(GIFTI_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/gifti")
+set_if_not_defined(GIFTI_INSTALL_ARCHIVE_DIR "${CMAKE_INSTALL_PREFIX}/include/gifti")
 
 
 option(BUILD_SHARED_LIBS "Toggle building shared libraries." ON)
@@ -107,9 +111,9 @@ target_link_libraries(gifti_test giftiio)
 
 # binaries
 install(TARGETS giftiio gifti_tool gifti_test
-    RUNTIME DESTINATION ${GIFTI_INSTALL_BIN_DIR} COMPONENT RuntimeLibraries
-    LIBRARY DESTINATION ${GIFTI_INSTALL_LIB_DIR} COMPONENT RuntimeLibraries
-    ARCHIVE DESTINATION ${GIFTI_INSTALL_LIB_DIR} COMPONENT Development)
+    RUNTIME DESTINATION ${GIFTI_INSTALL_RUNTIME_DIR} COMPONENT RuntimeLibraries
+    LIBRARY DESTINATION ${GIFTI_INSTALL_LIBRARY_DIR} COMPONENT RuntimeLibraries
+    ARCHIVE DESTINATION ${GIFTI_INSTALL_ARCHIVE_DIR} COMPONENT Development)
 
 # headers
 install(FILES gifti_io.h gifti_xml.h
