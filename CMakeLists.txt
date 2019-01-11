@@ -12,6 +12,10 @@ set(GIFTI_INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin")
 set(GIFTI_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 set(GIFTI_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/gifti")
 
+
+option(BUILD_SHARED_LIBS "Toggle building shared libraries." ON)
+add_definitions(-DHAVE_ZLIB)
+
 find_package(ITK)
 if(ITK_FOUND)
 # ITK provides expat and zlib.
@@ -47,21 +51,13 @@ ${gifticlib_SOURCE_DIR}
 ${gifticlib_BINARY_DIR}
 )
 
-set(GIFTIIO_SRC gifti_io.c gifti_xml.c)
 
-# shared version
-add_library(giftiio SHARED ${GIFTIIO_SRC})
-# Set library version when building shared libs.
 set_target_properties(giftiio PROPERTIES ${GIFTI_LIBRARY_PROPERTIES})
 target_link_libraries(giftiio ${EXPAT_LIBRARIES} ${NIFTI_LIBRARIES})
 if(ZLIB_FOUND)
   target_link_libraries(giftiio ${ZLIB_LIBRARIES})
 endif()
 
-# static version
-add_library(giftiio_static STATIC ${GIFTIIO_SRC})
-#The library target "via_static" has a default OUTPUT_NAME of "via_static", can be changed with
-set_target_properties(giftiio_static PROPERTIES ${GIFTI_LIBRARY_PROPERTIES} OUTPUT_NAME "giftiio")
 
 link_directories(${gifticlib_BINARY_DIR})
 
@@ -72,7 +68,7 @@ add_executable(gifti_test gifti_test.c)
 target_link_libraries(gifti_test giftiio ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${NIFTI_LIBRARIES})
 
 # binaries
-install(TARGETS giftiio giftiio_static gifti_tool gifti_test
+install(TARGETS giftiio gifti_tool gifti_test
     RUNTIME DESTINATION ${GIFTI_INSTALL_BIN_DIR} COMPONENT RuntimeLibraries
     LIBRARY DESTINATION ${GIFTI_INSTALL_LIB_DIR} COMPONENT RuntimeLibraries
     ARCHIVE DESTINATION ${GIFTI_INSTALL_LIB_DIR} COMPONENT Development)
