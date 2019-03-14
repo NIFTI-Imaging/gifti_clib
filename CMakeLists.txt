@@ -13,6 +13,10 @@ set(GIFTI_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 set(GIFTI_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/gifti")
 
 
+option(TEST_GIFTI "Enable tests" ON)
+if(${TEST_GIFTI})
+    enable_testing()
+endif()
 option(BUILD_SHARED_LIBS "Toggle building shared libraries." ON)
 add_definitions(-DHAVE_ZLIB)
 
@@ -71,3 +75,69 @@ install(TARGETS giftiio gifti_tool gifti_test
 install(FILES gifti_io.h gifti_xml.h
     DESTINATION ${GIFTI_INSTALL_INCLUDE_DIR}
     COMPONENT Development)
+
+#######################################################################
+## Add the cpack configuration settings last
+option(GIFTI_USE_PACKAGING "Configure the packaging options for GIFTI" OFF)
+mark_as_advanced(GIFTI_USE_PACKAGING)
+if(GIFTI_USE_PACKAGING)
+  include(cmake/GIFTICPackConfig.cmake)
+endif()
+
+#
+# Testing
+
+# enable_testing() sets the following variable:
+if(${CMAKE_TESTING_ENABLED})
+  include(CTest)
+  if(CMAKE_VERSION VERSION_LESS 3.11.0)
+    # CMAKE VERSION 3.11.0 needed for fetching data with cmake
+    message(
+      FATAL_ERROR
+        "ERROR:  The testing framework for gifti_clib requires CMake version 3.11.0 or greater"
+      )
+  endif()
+
+  include(FetchContent) # fetch data a configure time to simplify tests If new
+                        # or changed data is needed, add that data to the
+                        # https://github.com/NIFTI-Imaging/nifti-test-data repo
+                        # make a new release, and then update the URL and hash
+                        # (shasum -a 256 <downloaded tarball>).
+  fetchcontent_declare(
+    gifti_test_data
+    URL
+    https://github.com/NIFTI-Imaging/gifti-test-data/archive/0.0.1.tar.gz
+    URL_HASH
+    SHA256=9b97e830ad27a82efcacb41ea3a7c573b34b7b3ca47e0c0bfb65b44f604199c2)
+  fetchcontent_getproperties(gifti_test_data)
+  set(FETCHCONTENT_QUIET OFF)
+  fetchcontent_populate(gifti_test_data)
+endif()
+
+# Do all regression tests (add_test will only execute if TEST_GIFTI was set)
+add_test(NAME gifti_ver COMMAND $<TARGET_FILE:gifti_tool> -gifti_ver)
+add_test(NAME gifti_tool_ver COMMAND $<TARGET_FILE:gifti_tool> -ver)
+add_test(NAME gifti_help COMMAND $<TARGET_FILE:gifti_tool> -help)
+add_test(NAME gifti_gifti_hist COMMAND $<TARGET_FILE:gifti_tool> -gifti_hist)
+add_test(NAME gifti_hist COMMAND $<TARGET_FILE:gifti_tool> -hist)
+
+add_test(NAME gifti_disp_hdr
+         COMMAND $<TARGET_FILE:gifti_tool> -disp_hdr -infiles
+                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+add_test(NAME gifti_disp_nim
+         COMMAND $<TARGET_FILE:gifti_tool> -disp_nim -infiles
+                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+add_test(NAME gifti_disp_ext
+         COMMAND $<TARGET_FILE:gifti_tool> -disp_ext -infiles
+                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+add_test(NAME gifti_header_check
+         COMMAND $<TARGET_FILE:gifti_tool> -check_hdr -infiles
+                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+add_test(NAME gifti_nim_check
+         COMMAND $<TARGET_FILE:gifti_tool> -check_nim -infiles
+                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+
+add_test(
+  NAME pial_short_verbose
+  COMMAND $<TARGET_FILE:gifti_tool> -check_nim -infile
+          ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/ascii.pial.short.gii)
