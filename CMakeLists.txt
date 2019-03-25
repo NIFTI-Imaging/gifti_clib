@@ -114,6 +114,8 @@ if(${CMAKE_TESTING_ENABLED})
   fetchcontent_populate(gifti_test_data)
 endif()
 
+set(TEST_SCRIPT_DIR ${CMAKE_CURRENT_LIST_DIR}/regress_tests/cmake_test_scripts)
+set(TEST_DATA ${gifti_test_data_SOURCE_DIR}/gifti_regress_data)
 # Do all regression tests (add_test will only execute if TEST_GIFTI was set)
 add_test(NAME gifti_ver COMMAND $<TARGET_FILE:gifti_tool> -gifti_ver)
 add_test(NAME gifti_tool_ver COMMAND $<TARGET_FILE:gifti_tool> -ver)
@@ -122,22 +124,50 @@ add_test(NAME gifti_gifti_hist COMMAND $<TARGET_FILE:gifti_tool> -gifti_hist)
 add_test(NAME gifti_hist COMMAND $<TARGET_FILE:gifti_tool> -hist)
 
 add_test(NAME gifti_disp_hdr
-         COMMAND $<TARGET_FILE:gifti_tool> -disp_hdr -infiles
-                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+         COMMAND $<TARGET_FILE:gifti_tool> 
+                 -disp_hdr 
+                 -infiles ${TEST_DATA}/anat0.nii)
 add_test(NAME gifti_disp_nim
-         COMMAND $<TARGET_FILE:gifti_tool> -disp_nim -infiles
-                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+         COMMAND $<TARGET_FILE:gifti_tool> 
+                 -disp_nim 
+                 -infiles ${TEST_DATA}/anat0.nii)
 add_test(NAME gifti_disp_ext
-         COMMAND $<TARGET_FILE:gifti_tool> -disp_ext -infiles
-                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+         COMMAND $<TARGET_FILE:gifti_tool> 
+                 -disp_ext 
+                 -infiles ${TEST_DATA}/anat0.nii)
 add_test(NAME gifti_header_check
-         COMMAND $<TARGET_FILE:gifti_tool> -check_hdr -infiles
-                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+         COMMAND $<TARGET_FILE:gifti_tool> 
+                 -check_hdr 
+                 -infiles ${TEST_DATA}/anat0.nii)
 add_test(NAME gifti_nim_check
-         COMMAND $<TARGET_FILE:gifti_tool> -check_nim -infiles
-                 ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/anat0.nii)
+         COMMAND $<TARGET_FILE:gifti_tool> 
+                 -check_nim 
+                 -infiles ${TEST_DATA}/anat0.nii)
+add_test(NAME gifti_pial_short_verbose
+        COMMAND $<TARGET_FILE:gifti_tool> 
+                 -check_nim 
+                 -infile ${TEST_DATA}/ascii.pial.short.gii)
+add_test(NAME gifti_show_color_table_gifti
+        COMMAND $<TARGET_FILE:gifti_tool> 
+                -show_gifti
+                -infile ${TEST_DATA}/color.table.gii)
+add_test(NAME gifti_show_surfs
+        COMMAND $<TARGET_FILE:gifti_tool> 
+                -show_gifti
+                -infile ${TEST_DATA}/b64gz.ts.3.gii)
 
-add_test(
-  NAME pial_short_verbose
-  COMMAND $<TARGET_FILE:gifti_tool> -check_nim -infile
-          ${gifti_test_data_SOURCE_DIR}/gifti_regress_data/ascii.pial.short.gii)
+
+
+if(UNIX) # unix needed to run shell scripts
+ 
+ foreach(test_stubname no_data_flag no_updates_flag high_verbosity copy_surfs
+  b64_check buf_size encode indent compress other_formats new_dsets fix_errors
+  modify_and_compare approx label_table col_maj_1 col_maj_2 extern_data)
+  
+  add_test(
+    NAME gifti_${test_stubname}
+    COMMAND bash -xeu ${TEST_SCRIPT_DIR}/${test_stubname}.sh
+            $<TARGET_FILE:gifti_tool>
+            ${TEST_DATA})
+  endforeach()
+endif()
