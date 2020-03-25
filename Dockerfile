@@ -21,7 +21,7 @@ ENV PATH="/cmake/${CMAKE_VER}/bin:$PATH"
 
 RUN mkdir /gifti_clib 
 RUN mkdir /gifti_build 
-COPY ./* /gifti_clib/
+COPY . /gifti_clib/
 
 
 WORKDIR /gifti_build
