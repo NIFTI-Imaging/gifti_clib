@@ -31,22 +31,31 @@ else()
 # Otherwise, get it from elsewhere.
   find_package(EXPAT REQUIRED)
   find_package(ZLIB REQUIRED)
-  ### STEP 2 -- fetch nifti_clib immediately at configuration time, so add_subdirectory can be used.
-  include(FetchContent)
-  # If new or changed data is needed, add that data to the https://github.com/NIFTI-Imaging/nifti-test-data repo
-  # make a new release, and then update the URL and hash (shasum -a 256 <downloaded tarball>).
-  FetchContent_Declare( fetch_nifti_clib_git_repo
-          GIT_REPOSITORY https://github.com/NIFTI-Imaging/nifti_clib.git
-          GIT_TAG        master # or <HASH>
-          SOURCE_DIR     ${CMAKE_CURRENT_LIST_DIR}/nifti_clib_download # <- not standard,  remove this line to download in binary tree
-          )
-  FetchContent_GetProperties(fetch_nifti_clib_git_repo)
-  if(NOT fetch_nifti_clib_git_repo)
-      set(FETCHCONTENT_QUIET OFF)
-      message(STATUS "Downloading nifti_clib from github ... please wait")
-      FetchContent_Populate( fetch_nifti_clib_git_repo )
-      message(STATUS "download complete.")
-      add_subdirectory(${fetch_nifti_clib_git_repo_SOURCE_DIR} ${fetch_nifti_clib_git_repo_BINARY_DIR})
+  if(USE_SYSTEM_NIFTI)
+    find_package(NIFTI REQUIRED)
+  elseif(TARGET ITKniftiio)
+    # ITK provides ITKniftiio
+  else()
+    ### STEP 2 -- fetch nifti_clib immediately at configuration time, so add_subdirectory can be used.
+    include(FetchContent)
+    # If new or changed data is needed, add that data to the https://github.com/NIFTI-Imaging/nifti-test-data repo
+    # make a new release, and then update the URL and hash (shasum -a 256 <downloaded tarball>).
+    # In order to make changes and use them immediately in an downstream one can run cmake
+    # with the setting -DFETCHCONTENT_SOURCE_DIR_FETCH_NIFTI_CLIB_GIT_REPO=<path_to_nifti_codebase>
+    FetchContent_Declare( fetch_nifti_clib_git_repo
+            GIT_REPOSITORY https://github.com/NIFTI-Imaging/nifti_clib.git
+            GIT_TAG        master # or <HASH>
+            # SOURCE_DIR     ${CMAKE_CURRENT_LIST_DIR}/nifti_clib_download # <- not standard,  remove this line to download in binary tree
+            )
+    FetchContent_GetProperties(fetch_nifti_clib_git_repo)
+    # Add a check to see if ITKniftiio has already been created
+    if(NOT fetch_nifti_clib_git_repo_POPULATED)
+        set(FETCHCONTENT_QUIET OFF)
+        message(STATUS "Fetching nifti_clib targets")
+        FetchContent_Populate(fetch_nifti_clib_git_repo)
+        add_subdirectory(${fetch_nifti_clib_git_repo_SOURCE_DIR} ${fetch_nifti_clib_git_repo_BINARY_DIR})
+
+    endif()
   endif()
 endif()
 
