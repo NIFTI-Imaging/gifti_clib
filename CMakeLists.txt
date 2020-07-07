@@ -123,7 +123,12 @@ target_compile_definitions(
   PUBLIC $<$<NOT:$<BOOL:${USE_NIFTI2_CODE}>>:"USE_NIFTI_VERSION_1">
          ${GIFTIIO_COMPILE_DEF}
 )
-
+target_include_directories(
+    ${GIFTICLIB_NAME}
+    INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${GIFTI_INSTALL_INCLUDE_DIR}>
+)
 
 # With cmake min version > 3.13 the TARGET_NAME_IF_EXISTS genex would be
 # tidier in the lines below.
@@ -154,15 +159,11 @@ endif()
 
 if(GIFTI_BUILD_APPLICATIONS)
   add_gifti_executable(gifti_tool gifti_tool.c)
-  set_target_properties(
-    gifti_tool PROPERTIES PUBLIC_HEADER "gifti_xml.h;gifti_io.h"
-  )
   target_link_libraries(
     gifti_tool PUBLIC ${GIFTICLIB_NAME} ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES}
   )
 
   add_gifti_executable(gifti_test gifti_test.c)
-  set_target_properties(gifti_test PROPERTIES PUBLIC_HEADER gifti_test.h)
   target_link_libraries(gifti_test ${GIFTICLIB_NAME})
 endif()
 
