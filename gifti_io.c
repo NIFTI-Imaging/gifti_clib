@@ -2587,13 +2587,16 @@ int gifti_intent_from_string( const char * name )
     int tablen = sizeof(gifti_intent_list)/sizeof(gifti_intent_ele);
     int c;
 
-    if( !name ) return 0;
+    if( !name ) return -1;
 
     for( c = tablen-1; c > 0; c-- )
         if( !strcmp(name, gifti_intent_list[c].name) )
             break;
 
-    return gifti_intent_list[c].code;
+    if( !strcmp(name, gifti_intent_list[c].name) )
+      return gifti_intent_list[c].code;
+    else
+      return -1;
 }
 
 
@@ -2623,7 +2626,7 @@ int gifti_intent_is_valid( int code )
     int tablen = sizeof(gifti_intent_list)/sizeof(gifti_intent_ele);
     int c;
 
-    for( c = tablen-1; c > 0; c-- )
+    for( c = tablen-1; c >= 0; c-- )
         if( gifti_intent_list[c].code == code )
             break;
 
